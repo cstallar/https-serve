@@ -382,15 +382,15 @@ const loadConfig = async (cwd, entry, args) => {
 	}
 
 	if(args['--cert'] && args['--key']){
-		const options={
+		var options={
 			key: fs.readFileSync(args['--key']),
 			cert: fs.readFileSync(args['--cert'])
 		};
-		const https=true;
+		var https=true;
 	}
 	else{
-		const options={};
-		const https=false;
+		var options={};
+		var https=false;
 	}
 
 	for (const endpoint of args['--listen']) {
