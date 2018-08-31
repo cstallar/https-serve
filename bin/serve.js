@@ -153,8 +153,8 @@ const registerShutdown = (fn) => {
 	process.on('exit', wrapper);
 };
 
-const startEndpoint = (endpoint, config, args, https, options) => {
-	if(https) {
+const startEndpoint = (endpoint, config, args, https_used, options) => {
+	if(https_used) {
 		const server = https.createServer(options, (request, response) => {handler(request, response, config)});
 	}
 	else{
@@ -179,7 +179,7 @@ const startEndpoint = (endpoint, config, args, https, options) => {
 			localAddress = details;
 		} else if (typeof details === 'object' && details.port) {
 			const address = details.address === '::' ? 'localhost' : details.address;
-			if(https) {
+			if(https_used) {
 				localAddress = `https://${address}:${details.port}`;
 				try {
 					const {address: ip} = await lookup(os.hostname());
@@ -386,15 +386,15 @@ const loadConfig = async (cwd, entry, args) => {
 			key: fs.readFileSync(args['--key']),
 			cert: fs.readFileSync(args['--cert'])
 		};
-		var https=true;
+		var https_used=true;
 	}
 	else{
 		var options={};
-		var https=false;
+		var https_used=false;
 	}
 
 	for (const endpoint of args['--listen']) {
-		startEndpoint(endpoint, config, args, https, options);
+		startEndpoint(endpoint, config, args, https_used, options);
 	}
 
 	registerShutdown(() => {
