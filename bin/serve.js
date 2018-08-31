@@ -155,10 +155,10 @@ const registerShutdown = (fn) => {
 
 const startEndpoint = (endpoint, config, args, https_used, options) => {
 	if(https_used) {
-		const server = https.createServer(options, (request, response) => {handler(request, response, config)});
+		var server = https.createServer(options, (request, response) => {handler(request, response, config)});
 	}
 	else{
-		const server = http.createServer((request, response) => handler(request, response, config));
+		var server = http.createServer((request, response) => handler(request, response, config));
 	}
 	const {isTTY} = process.stdout;
 	const clipboard = args['--no-clipboard'] !== true;
