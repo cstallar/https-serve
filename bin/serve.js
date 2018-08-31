@@ -104,7 +104,7 @@ const getHelp = () => chalk`
           {bold $} {cyan serve} -l pipe:\\\\.\\pipe\\{underline PipeName}
 `;
 
-const parseEndpoint = (str) => {
+const parseEndpoint = (str, https_used) => {
 	if (!isNaN(str)) {
 		return [str];
 	}
@@ -131,7 +131,12 @@ const parseEndpoint = (str) => {
 
 		return [url.pathname];
 	case 'tcp:':
-		url.port = url.port || '5000';
+		if(https_used) {
+			url.port = url.port || '443';
+		}
+		else{
+			url.port = url.port || '80';
+		}
 		return [parseInt(url.port, 10), url.hostname];
 	default:
 		throw new Error(`Unknown --listen endpoint scheme (protocol): ${url.protocol}`);
