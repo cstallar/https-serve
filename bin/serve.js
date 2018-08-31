@@ -155,7 +155,7 @@ const registerShutdown = (fn) => {
 
 const startEndpoint = (endpoint, config, args, https, options) => {
 	if(https) {
-		const server = https.createServer(options, (request, response) => handler(request, response, config));
+		const server = https.createServer(options, (request, response) => {handler(request, response, config)});
 	}
 	else{
 		const server = http.createServer((request, response) => handler(request, response, config));
