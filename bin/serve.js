@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 // Native
+const https = require('https');
 const http = require('http');
 const path = require('path');
 const fs = require('fs');
@@ -152,8 +153,13 @@ const registerShutdown = (fn) => {
 	process.on('exit', wrapper);
 };
 
-const startEndpoint = (endpoint, config, args) => {
-	const server = http.createServer((request, response) => handler(request, response, config));
+const startEndpoint = (endpoint, config, args, https, options) => {
+	if(https) {
+		const server = https.createServer(options, (request, response) => handler(request, response, config));
+	}
+	else{
+		const server = http.createServer((request, response) => handler(request, response, config));
+	}
 	const {isTTY} = process.stdout;
 	const clipboard = args['--no-clipboard'] !== true;
 
@@ -173,13 +179,23 @@ const startEndpoint = (endpoint, config, args) => {
 			localAddress = details;
 		} else if (typeof details === 'object' && details.port) {
 			const address = details.address === '::' ? 'localhost' : details.address;
-
-			localAddress = `http://${address}:${details.port}`;
-			try {
-				const {address: ip} = await lookup(os.hostname());
-				networkAddress = `http://${ip}:${details.port}`;
-			} catch (err) {
-				console.error(error(`DNS lookup failed: ${err.message}`));
+			if(https) {
+				localAddress = `https://${address}:${details.port}`;
+				try {
+					const {address: ip} = await lookup(os.hostname());
+					networkAddress = `https://${ip}:${details.port}`;
+				} catch (err) {
+					console.error(error(`DNS lookup failed: ${err.message}`));
+				}
+			}
+			else{
+				localAddress = `http://${address}:${details.port}`;
+				try {
+					const {address: ip} = await lookup(os.hostname());
+					networkAddress = `http://${ip}:${details.port}`;
+				} catch (err) {
+					console.error(error(`DNS lookup failed: ${err.message}`));
+				}
 			}
 		}
 
@@ -310,6 +326,8 @@ const loadConfig = async (cwd, entry, args) => {
 			'--debug': Boolean,
 			'--config': String,
 			'--no-clipboard': Boolean,
+			'--cert': String,
+			'--key': String,
 			'-h': '--help',
 			'-v': '--version',
 			'-l': '--listen',
@@ -363,8 +381,20 @@ const loadConfig = async (cwd, entry, args) => {
 		}, ...existingRewrites];
 	}
 
+	if(args['--cert'] && args['--key']){
+		const options={
+			key: fs.readFileSync(args['--key']),
+			cert: fs.readFileSync(args['--cert'])
+		};
+		const https=true;
+	}
+	else{
+		const options={};
+		const https=false;
+	}
+
 	for (const endpoint of args['--listen']) {
-		startEndpoint(endpoint, config, args);
+		startEndpoint(endpoint, config, args, https, options);
 	}
 
 	registerShutdown(() => {
